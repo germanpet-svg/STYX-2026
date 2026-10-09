@@ -1,63 +1,110 @@
-Puerto a Windows del clásico Styx de DOS, hecho en una tarde con Win32 API pura (sin SDL, sin frameworks, sin dependencias raras). Un solo archivo .c de ~1000 líneas. Porque sí.
+# Styx for Windows
 
-text
+**Un port del clásico Styx de DOS, reconstruido en C11 con la API Win32 nativa.**  
+Sin SDL, sin frameworks y sin dependencias externas: un único archivo C y las bibliotecas estándar de Windows.
+
+> Un homenaje hecho por curiosidad, café y una obsesión repentina con el desensamblado. ☕🕹️
+
+```text
      ███████ ████████ ██    ██ ██   ██
      ██         ██     ██  ██   ██ ██
      ███████    ██      ████     ███
           ██    ██     ██  ██    ██
      ███████    ██    ██    ██   ██
               2  0  2  6
-🕹️ ¿Qué es esto?
-El mítico Styx (ese juego donde eres un puntero que dibuja líneas para conquistar territorio mientras un palo de 8 segmentos intenta matarte) reconstruido desde cero en C11 con la Win32 API. Sin SDL2. Sin librerías de terceros. Solo windows.h, gdi32, user32, winmm y mucho cariño.
+```
 
-La lógica está portada del Styx original de DOS (desensamblado incluido), con su Styx de 8 segmentos, sus Sparx que patrullan los bordes, su mecha que se consume, y sus rebotes con reintentos que hacen que el palo se acorte cuando se estrella.
+## 🎮 Acerca del juego
 
-✨ Características
-🎨 Framebuffer RGB32 renderizado a mano con SetDIBitsToDevice (nada de GDI lento).
+Styx es un juego arcade de conquista territorial: trazas líneas para capturar áreas de la pantalla mientras evitas a los enemigos que patrullan y rebotan por el campo de juego.
 
-🧠 Lógica fiel al original: 1 Styx en niveles 1-2, 2 desde el nivel 3; el Styx #2 muere si queda atrapado en territorio conquistado.
+Esta versión es una reimplementación para Windows escrita en **C11**. Busca conservar elementos característicos del juego original de DOS, como el Styx segmentado, las Sparx que recorren los bordes y el riesgo de que la mecha se agote mientras dibujas.
 
-⚡ Sparx que siguen la pared, nacen dormidas, despiertan cuando te alejas, y van el doble de rápido en niveles >2 cuando solo queda un Styx.
+## ✨ Características
 
-🔥 Mecha: si dibujas y te quedas quieto, explotas. Como debe ser.
+- **Win32 nativo:** utiliza la API de Windows, sin SDL2 ni frameworks de terceros.
+- **Renderizado RGB32:** framebuffer propio presentado mediante `SetDIBitsToDevice`.
+- **Enemigos Styx:** uno en los niveles 1–2 y dos a partir del nivel 3.
+- **Comportamiento de enemigos:** incluye rebotes, reintentos y reducción del Styx cuando se estrella, según la lógica implementada.
+- **Sparx:** patrullan los bordes, comienzan dormidas y se activan cuando te alejas; en niveles superiores a 2 pueden duplicar su velocidad cuando queda un solo Styx.
+- **Mecha:** el tiempo durante el trazado es limitado; si se agota, pierdes una vida.
+- **Música y efectos MIDI:** gestionados mediante `winmm`.
+- **HUD:** muestra puntuación, nivel, territorio, vidas, proximidad del Styx y estado de la mecha.
+- **Código compacto:** toda la implementación se concentra en `styx.c`.
 
-🎵 Música y efectos por MIDI con winmm (sí, MIDI en 2026, y suena bien).
+## 🕹️ Controles
 
-📊 HUD con puntos, nivel, territorio, vidas, cercanía del Styx y mecha.
+| Tecla | Acción |
+|---|---|
+| `← ↑ → ↓` / `W A S D` | Moverse |
+| `Shift` + dirección | Dibujar una línea |
+| Soltar `Shift` | Cancelar el trazado |
+| `M` | Activar o silenciar la música |
+| `Espacio` / `Enter` | Empezar o reiniciar |
+| `Esc` | Salir |
 
-🖥️ Un solo archivo: styx.c. Copiar, pegar, compilar, jugar.
+## 🏗️ Compilación
 
-🎮 Controles
-Tecla	Acción
-Flechas / WASD	Mover
-SHIFT + dirección	Dibujar línea (suelta SHIFT y se cancela)
-M	Activar/silenciar música
-ESPACIO / ENTER	Empezar / reiniciar
-ESC	Salir
-🏗️ Compilar
-Con w64devkit (o MinGW-w64 con GCC):
+### Requisitos
 
-bash
+- Windows.
+- [w64devkit](https://github.com/skeeto/w64devkit) o MinGW-w64 con GCC.
+- El archivo fuente `styx.c`.
+
+### Compilar con GCC
+
+Abre una terminal en el directorio que contiene `styx.c` y ejecuta:
+
+```bash
 gcc -std=c11 -O2 styx.c -o styx.exe -mwindows -lgdi32 -luser32 -lwinmm -lm
-⚠️ Ojo: hace falta -lwinmm para la música MIDI. Si lo olvidas, el Styx arranca pero sin banda sonora, lo cual es triste.
+```
 
-🎯 Cómo se juega
-El objetivo es conquistar el 65% del territorio (80% para bonus de puntos). Sales de un borde de la zona no conquistada, dibujas una línea hacia otra parte del borde, y todo lo que quede encerrado se rellena.
+Después, ejecuta `styx.exe`.
 
-El Styx rebota por la pantalla. Si toca tu línea mientras dibujas, pierdes una vida.
+**Importante:** `-lwinmm` enlaza la biblioteca multimedia de Windows necesaria para la música MIDI.
 
-Las Sparx patrullan los bordes. Si te tocan, pierdes una vida.
+## 🎯 Cómo jugar
 
-Si la mecha llega al máximo, pierdes una vida.
+1. Empieza desde el borde de la zona que todavía no has conquistado.
+2. Muévete hacia otra parte del borde para trazar una línea y cerrar un área.
+3. El área capturada se incorpora al territorio conquistado.
+4. Evita que el Styx toque tu línea mientras estás trazando y mantente lejos de las Sparx.
+5. Vigila la mecha: si se agota durante el trazado, pierdes una vida.
 
-Si el trazo supera las 4000 celdas… también pierdes. (El original cortaba a 2000, aquí somos más generosos.)
+### Objetivos y peligros
 
-Con 0 vidas: GAME OVER, y a empezar de nuevo como los valientes.
+- **Objetivo principal:** conquistar el **65 %** del territorio.
+- **Bonus:** alcanzar el **80 %** para obtener puntos adicionales.
+- Si el Styx toca tu línea durante el trazado, pierdes una vida.
+- Si una Sparx te alcanza, pierdes una vida.
+- Si la mecha llega al límite, pierdes una vida.
+- Los trazos de más de **4.000 celdas** también provocan la pérdida de una vida.
+- Al quedarte sin vidas, aparece `GAME OVER` y tendrás que empezar otra partida.
 
-🧩 ¿Por qué?
-Porque hacer un juego completo en Win32 puro, sin dependencias, con MIDI y todo, en pleno 2026, es exactamente el tipo de cosa que uno hace un domingo aburrido. Y porque el Styx original se merecía un port decente.
+## 🔧 Tecnologías
 
-📜 Licencia
-Haz lo que quieras con él. Es un homenaje. Si te sirve, si lo mejoras, si lo portas a otra cosa — adelante. El Styx original no es mío, esto es solo una reimplementación cariñosa.
+- Lenguaje: **C11**
+- Plataforma: **Windows**
+- API gráfica y de ventanas: **Win32**, `gdi32`, `user32`
+- Música y efectos: **winmm**
+- Compilador recomendado: **GCC con w64devkit o MinGW-w64**
 
-Hecho en una tarde con demasiado café y una obsesión repentina con el desensamblado. ☕🪵
+## 📁 Estructura
+
+```text
+.
+├── styx.c
+└── README.md
+```
+
+La estructura anterior describe la distribución mínima esperada para compilar el juego; si el repositorio incluye otros archivos, consúltalos directamente en el proyecto.
+
+## 📜 Licencia y atribución
+
+Este proyecto es una **reimplementación no oficial y hecha por aficionados**, inspirada en Styx para DOS. No se afirma la autoría del juego original ni de sus elementos originales. Los derechos sobre el juego original pertenecen a sus respectivos titulares.
+
+El código de esta reimplementación se ofrece con intención de homenaje. **No se ha especificado una licencia formal para este repositorio**; antes de reutilizar, modificar o redistribuir el código, conviene definir una licencia explícita y comprobar los derechos aplicables al material original.
+
+---
+
+**Hecho en 2026 con Win32, C11 y muchas ganas de volver a jugar.**
